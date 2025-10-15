@@ -1,0 +1,11 @@
+# PWA Icons Needed
+
+Create these icon sizes with a green "Q" logo:
+- icon-144x144.png
+- icon-192x192.png
+
+For now, you can:
+1. Open create-icon.html in a browser to generate icons
+2. Or temporarily disable PWA by commenting out the withPWA wrapper in next.config.js
+
+The authentication flow should work without icons.

@@ -1,0 +1,54 @@
+{
+  "name": "QuitSmoking - Smoking Cessation App",
+  "short_name": "QuitSmoking",
+  "description": "Your companion for a smoke-free life. Track progress, manage cravings, and connect with a supportive community.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f0fdf4",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [],
+  "shortcuts": [
+    {
+      "name": "SOS - Get Help",
+      "short_name": "SOS",
+      "description": "Get immediate help with a craving",
+      "url": "/cravings?sos=true",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Log Craving",
+      "short_name": "Log",
+      "description": "Track a craving you experienced",
+      "url": "/cravings?action=log",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Daily Check-in",
+      "short_name": "Check-in",
+      "description": "Update your daily progress",
+      "url": "/progress?action=checkin",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "categories": ["health", "lifestyle", "medical"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}

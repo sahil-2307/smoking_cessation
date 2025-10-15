@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Icon</title>
+</head>
+<body>
+    <canvas id="canvas" width="144" height="144"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Create a green circle icon
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(0, 0, 144, 144);
+
+        // Add a white "Q" in the center
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 80px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Q', 72, 72);
+
+        // Download the icon
+        const link = document.createElement('a');
+        link.download = 'icon-144x144.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    </script>
+</body>
+</html>
