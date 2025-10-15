@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useQuitProgress } from '@/hooks/useQuitProgress'
+import { useAppData } from '@/contexts/AppDataContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
-  const { stats, loading: statsLoading, error } = useQuitProgress()
+  const { quitStats: stats, loading: statsLoading, error } = useAppData()
   const [hasTimedOut, setHasTimedOut] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)

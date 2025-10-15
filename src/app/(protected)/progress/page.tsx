@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/hooks/useAuth'
-import { useQuitProgress } from '@/hooks/useQuitProgress'
+import { useAppData } from '@/contexts/AppDataContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,10 +10,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar, CheckCircle, XCircle } from 'lucide-react'
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function ProgressPage() {
   const { user, loading: authLoading } = useAuth()
-  const { stats, loading: statsLoading, logProgress, getTodayProgress } = useQuitProgress()
+  const { quitStats: stats, loading: statsLoading, refreshData } = useAppData()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [todayEntry, setTodayEntry] = useState<any>(null)
 
@@ -49,8 +50,21 @@ export default function ProgressPage() {
 
       console.log('Full progress data to save:', progressData)
 
-      // The logProgress function should handle upsert, but let's ensure it works
-      await logProgress(progressData)
+      // Save progress data directly
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('quit_progress')
+        .upsert({
+          user_id: user.id,
+          ...progressData
+        }, {
+          onConflict: 'user_id,date'
+        })
+
+      if (error) {
+        console.error('Progress logging error:', error)
+        throw error
+      }
 
       console.log('Progress saved successfully!')
 
@@ -63,6 +77,9 @@ export default function ProgressPage() {
       })
 
       alert('Progress logged successfully! 🎉')
+
+      // Refresh the cached data
+      refreshData()
 
     } catch (error: any) {
       console.error('Progress logging error:', error)
