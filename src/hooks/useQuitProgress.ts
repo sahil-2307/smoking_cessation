@@ -1,24 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { calculateQuitStats, getTimeSinceQuit } from '@/lib/utils'
 
 export function useQuitProgress() {
   const { user } = useAuth()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchStats = useCallback(async () => {
     if (!user) {
       setLoading(false)
       return
     }
-
-    const fetchStats = async () => {
       try {
         setLoading(true)
         setError(null)
@@ -125,9 +123,12 @@ export function useQuitProgress() {
       } finally {
         setLoading(false)
       }
-    }
+  }, [user])
 
+  useEffect(() => {
     fetchStats()
+
+    if (!user) return
 
     // Set up real-time updates
     const channel = supabase
@@ -149,7 +150,7 @@ export function useQuitProgress() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [user, supabase])
+  }, [fetchStats])
 
   const logProgress = async (data: {
     date: string
