@@ -15,16 +15,15 @@ interface AppDataContextType {
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined)
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const supabase = useMemo(() => createClient(), [])
   const [quitStats, setQuitStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [dataFetched, setDataFetched] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
-  const fetchAllData = useMemo(() => async () => {
-    if (!user || dataFetched) {
-      setLoading(false)
+  const fetchAllData = async () => {
+    if (!user || authLoading) {
       return
     }
 
@@ -38,7 +37,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       if (!profile) {
         console.log('AppDataContext: No profile found')
         setQuitStats(null)
-        setDataFetched(true)
+        setInitialized(true)
         setLoading(false)
         return
       }
@@ -46,7 +45,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       if (!profile.quit_date) {
         console.log('AppDataContext: No quit date set')
         setQuitStats(null)
-        setDataFetched(true)
+        setInitialized(true)
         setLoading(false)
         return
       }
@@ -123,7 +122,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
       console.log('AppDataContext: Data fetch completed successfully')
       setQuitStats(finalStats)
-      setDataFetched(true)
+      setInitialized(true)
 
     } catch (error: any) {
       console.error('AppDataContext: Error fetching data:', error)
@@ -131,26 +130,32 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }, [user, dataFetched, supabase])
+  }
 
   useEffect(() => {
-    if (user && !dataFetched) {
-      fetchAllData()
-    } else if (!user) {
-      setQuitStats(null)
-      setLoading(false)
-      setDataFetched(false)
+    if (!authLoading) {
+      if (!user) {
+        // User is not logged in, reset everything
+        setQuitStats(null)
+        setLoading(false)
+        setInitialized(true)
+        setError(null)
+      } else if (!initialized) {
+        // User is logged in and we haven't initialized yet
+        console.log('AppDataContext: User available, fetching data...')
+        fetchAllData()
+      }
     }
-  }, [user, fetchAllData, dataFetched])
+  }, [user, authLoading, initialized])
 
   const refreshData = () => {
-    setDataFetched(false)
+    setInitialized(false)
     fetchAllData()
   }
 
   const value = {
     quitStats,
-    loading,
+    loading: authLoading || loading,
     error,
     refreshData
   }
