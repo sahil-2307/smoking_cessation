@@ -24,6 +24,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   const fetchAllData = async () => {
     if (!user || authLoading) {
+      console.log('AppDataContext: Skipping fetch - no user or auth loading')
       return
     }
 
@@ -31,6 +32,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       setError(null)
       console.log('AppDataContext: Starting data fetch for user:', user.id)
+
+      // Add timeout protection
+      const fetchTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Data fetch timeout after 10 seconds')), 10000)
+      )
 
       // Use the profile data from useAuth instead of fetching again
       const profile = user.profile
@@ -52,8 +58,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
       console.log('AppDataContext: Fetching quit progress, cravings, and achievements')
 
-      // Fetch all related data in parallel
-      const [progressResult, cravingsResult, achievementsResult] = await Promise.all([
+      // Fetch all related data in parallel with timeout protection
+      const dataFetchPromise = Promise.all([
         supabase
           .from('quit_progress')
           .select('*')
@@ -72,6 +78,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           .eq('user_id', user.id)
       ])
 
+      const [progressResult, cravingsResult, achievementsResult] = await Promise.race([dataFetchPromise, fetchTimeout]) as any
+
       // Calculate basic quit statistics
       const quitStatsData = calculateQuitStats(
         profile.quit_date,
@@ -87,7 +95,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       let currentStreak = 0
       const progressData = progressResult.data
       if (progressData && progressData.length > 0) {
-        const sortedData = progressData.sort((a, b) =>
+        const sortedData = progressData.sort((a: any, b: any) =>
           new Date(b.date).getTime() - new Date(a.date).getTime()
         )
 
@@ -104,7 +112,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
       // Process cravings data
       const totalCravings = cravingsResult.data?.length || 0
-      const resistedCravings = cravingsResult.data?.filter(c => c.resisted).length || 0
+      const resistedCravings = cravingsResult.data?.filter((c: any) => c.resisted).length || 0
 
       // Process achievements
       const achievementCount = achievementsResult.data?.length || 0
@@ -132,10 +140,21 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Reset initialization when user changes (including on auth state changes)
   useEffect(() => {
+    console.log('AppDataContext: User effect triggered', { user: !!user, authLoading, initialized })
+    setInitialized(false)
+    setQuitStats(null)
+    setError(null)
+  }, [user?.id]) // Only reset when user ID changes
+
+  useEffect(() => {
+    console.log('AppDataContext: Auth effect triggered', { authLoading, user: !!user, initialized })
+
     if (!authLoading) {
       if (!user) {
         // User is not logged in, reset everything
+        console.log('AppDataContext: No user, resetting state')
         setQuitStats(null)
         setLoading(false)
         setInitialized(true)
@@ -144,6 +163,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         // User is logged in and we haven't initialized yet
         console.log('AppDataContext: User available, fetching data...')
         fetchAllData()
+      } else {
+        // User is available and already initialized
+        setLoading(false)
       }
     }
   }, [user, authLoading, initialized])
