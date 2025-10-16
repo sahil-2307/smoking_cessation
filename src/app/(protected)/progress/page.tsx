@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/hooks/useAuth'
-import { useAppData } from '@/contexts/AppDataContext'
+import { useQuitProgress } from '@/hooks/useQuitProgress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,11 +10,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar, CheckCircle, XCircle } from 'lucide-react'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 export default function ProgressPage() {
   const { user, loading: authLoading } = useAuth()
-  const { quitStats: stats, loading: statsLoading, refreshData } = useAppData()
+  const { stats, loading: statsLoading, logProgress, getTodayProgress } = useQuitProgress()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [todayEntry, setTodayEntry] = useState<any>(null)
 
@@ -37,9 +36,6 @@ export default function ProgressPage() {
       const validMoods = ['excellent', 'good', 'okay', 'difficult', 'terrible']
       const moodToSave = formData.mood && validMoods.includes(formData.mood) ? formData.mood : null
 
-      console.log('Saving progress with mood:', moodToSave)
-      console.log('Form mood value was:', formData.mood)
-
       const progressData = {
         date: today,
         is_smoke_free: formData.is_smoke_free,
@@ -48,25 +44,7 @@ export default function ProgressPage() {
         mood: moodToSave || undefined
       }
 
-      console.log('Full progress data to save:', progressData)
-
-      // Save progress data directly
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('quit_progress')
-        .upsert({
-          user_id: user.id,
-          ...progressData
-        }, {
-          onConflict: 'user_id,date'
-        })
-
-      if (error) {
-        console.error('Progress logging error:', error)
-        throw error
-      }
-
-      console.log('Progress saved successfully!')
+      await logProgress(progressData)
 
       // Reset form
       setFormData({
@@ -77,9 +55,6 @@ export default function ProgressPage() {
       })
 
       alert('Progress logged successfully! 🎉')
-
-      // Refresh the cached data
-      refreshData()
 
     } catch (error: any) {
       console.error('Progress logging error:', error)
