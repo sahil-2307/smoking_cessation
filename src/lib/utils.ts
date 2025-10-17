@@ -10,7 +10,34 @@ export function formatDate(date: string | Date, formatStr: string = 'PPP'): stri
   return format(new Date(date), formatStr)
 }
 
-export function calculateQuitStats(quitDate: string, cigarettesPerDay: number, costPerPack: number, cigarettesPerPack: number = 20) {
+// Currency conversion rates (USD to INR, update as needed)
+const CURRENCY_RATES = {
+  USD_TO_INR: 83, // 1 USD = 83 INR (approximate)
+  INR_TO_USD: 1 / 83
+}
+
+export function convertCurrency(amount: number, fromCurrency: 'INR' | 'USD', toCurrency: 'INR' | 'USD'): number {
+  if (fromCurrency === toCurrency) return amount
+
+  if (fromCurrency === 'USD' && toCurrency === 'INR') {
+    return amount * CURRENCY_RATES.USD_TO_INR
+  }
+
+  if (fromCurrency === 'INR' && toCurrency === 'USD') {
+    return amount * CURRENCY_RATES.INR_TO_USD
+  }
+
+  return amount
+}
+
+export function calculateQuitStats(
+  quitDate: string,
+  cigarettesPerDay: number,
+  costPerPack: number,
+  cigarettesPerPack: number = 20,
+  inputCurrency: 'INR' | 'USD' = 'INR',
+  displayCurrency: 'INR' | 'USD' = 'INR'
+) {
   const quit = new Date(quitDate)
   const now = new Date()
 
@@ -31,7 +58,10 @@ export function calculateQuitStats(quitDate: string, cigarettesPerDay: number, c
 
   const cigarettesNotSmoked = days * cigarettesPerDay
   const packsNotBought = cigarettesNotSmoked / cigarettesPerPack
-  const moneySaved = packsNotBought * costPerPack
+  const moneySavedInInputCurrency = packsNotBought * costPerPack
+
+  // Convert to display currency if different
+  const moneySaved = convertCurrency(moneySavedInInputCurrency, inputCurrency, displayCurrency)
 
   // Average time per cigarette is about 5 minutes
   const timeRegainedHours = (cigarettesNotSmoked * 5) / 60

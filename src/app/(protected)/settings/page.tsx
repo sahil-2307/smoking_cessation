@@ -4,16 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Settings, User, Bell, Shield, LogOut, Edit } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Settings, User, Bell, Shield, LogOut, Edit, DollarSign } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useUserSettings } from '@/hooks/useUserSettings'
 
 export default function SettingsPage() {
+  const { settings, updateSettings } = useUserSettings()
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSavingCurrency, setIsSavingCurrency] = useState(false)
   const [editForm, setEditForm] = useState({
     username: '',
     full_name: ''
@@ -93,6 +97,18 @@ export default function SettingsPage() {
       alert('Error updating profile: ' + error.message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleCurrencyChange = async (currency: 'INR' | 'USD') => {
+    setIsSavingCurrency(true)
+    try {
+      await updateSettings({ currency })
+      alert('Currency preference updated! Your savings will now be displayed in ' + currency)
+    } catch (error: any) {
+      alert('Failed to update currency: ' + error.message)
+    } finally {
+      setIsSavingCurrency(false)
     }
   }
 
@@ -192,6 +208,41 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Currency Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <DollarSign className="mr-2 h-5 w-5" />
+              Currency Preferences
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currency">Preferred Currency</Label>
+              <Select
+                value={settings?.currency || 'INR'}
+                onValueChange={handleCurrencyChange}
+                disabled={isSavingCurrency}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="INR">₹ Indian Rupee (INR)</SelectItem>
+                  <SelectItem value="USD">$ US Dollar (USD)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-600">
+                All money-related calculations will be displayed in your preferred currency.
+                {settings?.currency === 'INR'
+                  ? ' USD amounts will be converted to INR using current exchange rates.'
+                  : ' INR amounts will be converted to USD using current exchange rates.'
+                }
+              </p>
+            </div>
           </CardContent>
         </Card>
 

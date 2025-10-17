@@ -3,10 +3,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserSettings } from '@/hooks/useUserSettings'
 import { calculateQuitStats, getTimeSinceQuit } from '@/lib/utils'
 
 export function useQuitProgress() {
   const { user } = useAuth()
+  const { settings } = useUserSettings()
   const supabase = useMemo(() => createClient(), [])
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -36,12 +38,15 @@ export function useQuitProgress() {
           return
         }
 
-        // Calculate basic quit statistics
+        // Calculate basic quit statistics with currency conversion
+        // Assume cost was entered in user's preferred currency, display in same currency
         const quitStats = calculateQuitStats(
           profile.quit_date,
           profile.cigarettes_per_day || 0,
           profile.cost_per_pack || 0,
-          profile.cigarettes_per_pack || 20
+          profile.cigarettes_per_pack || 20,
+          settings.currency, // currency the cost was entered in
+          settings.currency  // currency to display in
         )
 
         // Get time since quit
@@ -106,7 +111,8 @@ export function useQuitProgress() {
           success_rate: totalCravings > 0 ? (resistedCravings / totalCravings) * 100 : 100,
           achievement_count: achievementCount,
           profile,
-          timeSinceQuit
+          timeSinceQuit,
+          currency: settings.currency
         })
 
       } catch (error: any) {
@@ -142,6 +148,13 @@ export function useQuitProgress() {
       supabase.removeChannel(channel)
     }
   }, [fetchStats])
+
+  // Refetch when settings change (particularly currency)
+  useEffect(() => {
+    if (settings) {
+      fetchStats()
+    }
+  }, [settings.currency, fetchStats])
 
   const logProgress = async (data: {
     date: string

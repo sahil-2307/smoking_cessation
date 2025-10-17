@@ -21,6 +21,7 @@ export default function OnboardingPage() {
     cigarettes_per_day: '',
     cost_per_pack: '',
     cigarettes_per_pack: '20',
+    currency: 'INR',
     motivation: '',
     previous_attempts: '',
     support_system: ''
@@ -82,7 +83,26 @@ export default function OnboardingPage() {
         throw result.error
       }
 
-      console.log('Profile saved successfully!')
+      // Also save user settings (currency preference)
+      const settingsData = {
+        user_id: user.id,
+        currency: formData.currency as 'INR' | 'USD'
+      }
+
+      console.log('Saving user settings:', settingsData)
+
+      const settingsPromise = supabase
+        .from('user_settings')
+        .upsert(settingsData)
+
+      const settingsResult = await Promise.race([settingsPromise, timeoutPromise]) as any
+
+      if (settingsResult && settingsResult.error) {
+        console.error('Settings save error:', settingsResult.error)
+        // Don't fail onboarding if settings fail
+      }
+
+      console.log('Profile and settings saved successfully!')
       alert('Profile setup complete! Welcome to your quit journey! 🎉')
 
       // Small delay to ensure the success message is visible
@@ -195,7 +215,24 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="cost_per_pack">Cost per Pack ($)</Label>
+                <Label htmlFor="currency">Currency</Label>
+                <Select
+                  value={formData.currency}
+                  onValueChange={(value) => handleInputChange('currency', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="INR">₹ Indian Rupee (INR)</SelectItem>
+                    <SelectItem value="USD">$ US Dollar (USD)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="cost_per_pack">
+                  Cost per Pack ({formData.currency === 'INR' ? '₹' : '$'})
+                </Label>
                 <Input
                   id="cost_per_pack"
                   type="number"
@@ -203,9 +240,15 @@ export default function OnboardingPage() {
                   step="0.01"
                   value={formData.cost_per_pack}
                   onChange={(e) => handleInputChange('cost_per_pack', e.target.value)}
-                  placeholder="e.g., 12.50"
+                  placeholder={formData.currency === 'INR' ? 'e.g., 150' : 'e.g., 12.50'}
                   required
                 />
+                <p className="text-sm text-gray-600 mt-1">
+                  {formData.currency === 'INR'
+                    ? 'Typical cigarette pack costs ₹100-200 in India'
+                    : 'Typical cigarette pack costs $8-15 in US'
+                  }
+                </p>
               </div>
               <div>
                 <Label htmlFor="cigarettes_per_pack">Cigarettes per Pack</Label>

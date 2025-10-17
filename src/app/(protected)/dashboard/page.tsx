@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
 import { downloadBadge, getBadgeData } from '@/utils/badgeGenerator'
+import { formatCurrency } from '@/lib/utils'
 
 export default function DashboardPage() {
   const { user, loading: authLoading, sessionInitialized } = useAuth()
@@ -226,7 +227,7 @@ export default function DashboardPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.money_saved?.toFixed(2) || '0.00'}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.money_saved || 0, stats.currency)}</div>
               <p className="text-xs text-muted-foreground">
                 {stats.cigarettes_not_smoked || 0} cigarettes avoided
               </p>
