@@ -27,6 +27,11 @@ function ResetPasswordForm() {
 
   const passwordValidation = validatePassword(password)
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Reset password page - user:', !!user, 'loading:', loading, 'sessionInitialized:', user || loading)
+  }, [user, loading])
+
   // Check for error or success messages from the auth callback
   useEffect(() => {
     const error = searchParams.get('error')
@@ -47,17 +52,25 @@ function ResetPasswordForm() {
     }
   }, [searchParams])
 
-  // Check if user has a valid session for password reset (but don't immediately error)
+  // Check if user has a valid session for password reset (but be very lenient)
   useEffect(() => {
-    // Give some time for the session to load after redirect
-    const timer = setTimeout(() => {
-      if (!loading && !user) {
-        setError('Session expired. Please request a new password reset link.')
-      }
-    }, 2000) // Wait 2 seconds for session to establish
+    // Only show session error if we've been on the page for a while and still no session
+    // and there's no error from the URL params, and the user tried to submit the form
+    const hasUrlError = searchParams.get('error')
 
-    return () => clearTimeout(timer)
-  }, [user, loading])
+    if (!hasUrlError) {
+      const timer = setTimeout(() => {
+        // Only show session error if they haven't attempted to submit yet
+        // Many password reset flows work without an initial session
+        if (!loading && !user && !error) {
+          console.log('No session detected after 10 seconds, but allowing user to try password reset')
+          // Don't set error immediately - let them try to reset password first
+        }
+      }, 10000) // Wait 10 seconds before even considering session issues
+
+      return () => clearTimeout(timer)
+    }
+  }, [user, loading, error, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,6 +88,12 @@ function ResetPasswordForm() {
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
+      return
+    }
+
+    // Check for session only when actually trying to update password
+    if (!user) {
+      setError('Session expired or invalid. Please request a new password reset link.')
       return
     }
 
@@ -96,7 +115,14 @@ function ResetPasswordForm() {
         })
       }, 1000)
     } catch (error: any) {
-      setError(error.message || 'An error occurred while updating your password')
+      const errorMessage = error.message || 'An error occurred while updating your password'
+
+      // If it's a session error, provide a helpful message
+      if (errorMessage.includes('session') || errorMessage.includes('auth')) {
+        setError('Your session has expired. Please request a new password reset link.')
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }
