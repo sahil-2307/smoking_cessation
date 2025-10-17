@@ -21,7 +21,7 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false)
   const [countdown, setCountdown] = useState(3)
 
-  const { updatePassword } = useAuth()
+  const { updatePassword, user, loading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -36,6 +36,13 @@ function ResetPasswordForm() {
       setError(errorDescription || 'Invalid or expired reset link')
     }
   }, [searchParams])
+
+  // Check if user has a valid session for password reset
+  useEffect(() => {
+    if (!loading && !user) {
+      setError('Session expired. Please request a new password reset link.')
+    }
+  }, [user, loading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

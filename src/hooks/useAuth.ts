@@ -166,7 +166,7 @@ export function useAuth() {
       : window.location.origin
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${baseUrl}/auth/reset-password`,
+      redirectTo: `${baseUrl}/auth/callback`,
     })
 
     if (error) throw error
