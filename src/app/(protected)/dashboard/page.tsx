@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Calendar, Clock, Target, TrendingUp, Heart, Award, Edit } from 'lucide-react'
+import { Clock, Target, TrendingUp, Heart, Award, Edit, Badge, Sparkles, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
@@ -252,20 +252,103 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
+          {/* Health Benefits Timeline */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Heart className="mr-2 h-4 w-4 text-red-500" />
+                Your Health Recovery Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats?.timeSinceQuit?.hours >= 12 && (
+                  <div className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                    <div className="flex-1">
+                      <p className="font-medium text-green-800">12 Hours: Carbon Monoxide Levels Normalize</p>
+                      <p className="text-sm text-green-600">Your blood's carbon monoxide level has returned to normal, improving oxygen delivery to your organs.</p>
+                    </div>
+                  </div>
+                )}
+                {stats?.timeSinceQuit?.days >= 1 && (
+                  <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                    <div className="flex-1">
+                      <p className="font-medium text-blue-800">24 Hours: Heart Attack Risk Decreases</p>
+                      <p className="text-sm text-blue-600">Your risk of heart attack has already started to decrease. Your circulation is improving!</p>
+                    </div>
+                  </div>
+                )}
+                {stats?.timeSinceQuit?.days >= 3 && (
+                  <div className="flex items-start space-x-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                    <div className="flex-1">
+                      <p className="font-medium text-purple-800">3 Days: Breathing Improves</p>
+                      <p className="text-sm text-purple-600">Your lung function is increasing and you can breathe easier. Nicotine is completely out of your system!</p>
+                    </div>
+                  </div>
+                )}
+                {stats?.timeSinceQuit?.days >= 7 && (
+                  <div className="flex items-start space-x-3 p-3 bg-orange-50 rounded-lg border-l-4 border-orange-500">
+                    <div className="flex-1">
+                      <p className="font-medium text-orange-800">1 Week: Taste & Smell Return</p>
+                      <p className="text-sm text-orange-600">Your senses of taste and smell are significantly improved. Food tastes better than ever!</p>
+                    </div>
+                  </div>
+                )}
+                {(!stats?.timeSinceQuit?.hours || stats?.timeSinceQuit?.hours < 12) && (
+                  <div className="text-center py-6">
+                    <Heart className="h-16 w-16 text-red-200 mx-auto mb-4" />
+                    <p className="text-lg font-medium text-gray-700 mb-2">Your Health Recovery Starts Now!</p>
+                    <p className="text-sm text-gray-500">Every minute without smoking is healing your body. The benefits begin immediately.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Achievement Badges */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+              <CardTitle className="text-sm font-medium">Latest Achievements</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full" variant="outline">
-                <Link href="/progress">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Log Today
-                </Link>
-              </Button>
+            <CardContent className="space-y-3">
+              <div className="grid gap-2">
+                {stats?.timeSinceQuit?.days >= 1 && (
+                  <div className="flex items-center space-x-3 p-2 bg-green-50 rounded-lg">
+                    <Badge className="h-8 w-8 bg-green-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">First Day Warrior</p>
+                      <p className="text-xs text-muted-foreground">24 hours smoke-free!</p>
+                    </div>
+                  </div>
+                )}
+                {stats?.timeSinceQuit?.days >= 3 && (
+                  <div className="flex items-center space-x-3 p-2 bg-blue-50 rounded-lg">
+                    <Sparkles className="h-8 w-8 text-blue-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Nicotine Fighter</p>
+                      <p className="text-xs text-muted-foreground">3 days - worst cravings behind you!</p>
+                    </div>
+                  </div>
+                )}
+                {stats?.timeSinceQuit?.days >= 7 && (
+                  <div className="flex items-center space-x-3 p-2 bg-purple-50 rounded-lg">
+                    <Award className="h-8 w-8 text-purple-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Week Champion</p>
+                      <p className="text-xs text-muted-foreground">1 week smoke-free milestone!</p>
+                    </div>
+                  </div>
+                )}
+                {(!stats?.timeSinceQuit?.days || stats?.timeSinceQuit?.days < 1) && (
+                  <div className="text-center py-4">
+                    <Zap className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Start your journey to unlock achievements!</p>
+                  </div>
+                )}
+              </div>
               <Button asChild className="w-full" variant="outline">
                 <Link href="/journal">
+                  <Heart className="mr-2 h-4 w-4" />
                   View Journal
                 </Link>
               </Button>
@@ -287,9 +370,9 @@ export default function DashboardPage() {
               </>
             ) : (
               <>
-                <p>Start logging your daily progress to see your stats!</p>
+                <p>Start your smoke-free journey to unlock achievements and track your health improvements!</p>
                 <Button asChild className="mt-4">
-                  <Link href="/progress">Log Today's Progress</Link>
+                  <Link href="/journal">Start Your Journal</Link>
                 </Button>
               </>
             )}

@@ -9,7 +9,6 @@ import {
   Menu,
   X,
   Home,
-  BarChart3,
   AlertCircle,
   BookOpen,
   Users,
@@ -21,7 +20,6 @@ import { cn } from '@/lib/utils'
 
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Progress', href: '/progress', icon: BarChart3 },
   { name: 'Cravings', href: '/cravings', icon: AlertCircle },
   { name: 'Journal', href: '/journal', icon: BookOpen },
   { name: 'Community', href: '/community', icon: Users },
