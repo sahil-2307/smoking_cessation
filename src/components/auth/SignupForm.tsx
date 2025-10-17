@@ -70,14 +70,9 @@ export default function SignupForm() {
 
   const handleGoogleSignIn = async () => {
     setError(null)
-    setIsLoading(true)
 
-    try {
-      await signInWithGoogle()
-    } catch (error: any) {
-      setError(error.message || 'An error occurred during Google sign in')
-      setIsLoading(false)
-    }
+    // Show coming soon message instead of trying to authenticate
+    setError('Google Sign-Up is coming soon! Please use email and password for now.')
   }
 
   if (success) {
@@ -259,12 +254,15 @@ export default function SignupForm() {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full relative"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >
             <Chrome className="mr-2 h-4 w-4" />
             Google
+            <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+              Coming Soon
+            </span>
           </Button>
 
           <div className="text-sm text-center">

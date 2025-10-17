@@ -51,14 +51,9 @@ export default function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setError(null)
-    setIsLoading(true)
 
-    try {
-      await signInWithGoogle()
-    } catch (error: any) {
-      setError(error.message || 'An error occurred during Google sign in')
-      setIsLoading(false)
-    }
+    // Show coming soon message instead of trying to authenticate
+    setError('Google Sign-In is coming soon! Please use email and password for now.')
   }
 
   return (
@@ -137,12 +132,15 @@ export default function LoginForm() {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full relative"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >
             <Chrome className="mr-2 h-4 w-4" />
             Google
+            <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+              Coming Soon
+            </span>
           </Button>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
