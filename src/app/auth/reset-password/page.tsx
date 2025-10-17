@@ -33,15 +33,30 @@ function ResetPasswordForm() {
     const errorDescription = searchParams.get('error_description')
 
     if (error) {
-      setError(errorDescription || 'Invalid or expired reset link')
+      let errorMessage = 'Invalid or expired reset link'
+
+      if (error === 'session_error') {
+        errorMessage = 'There was an error establishing your session. Please try requesting a new password reset link.'
+      } else if (error === 'invalid_link') {
+        errorMessage = 'The password reset link is invalid or has expired. Please request a new one.'
+      } else if (errorDescription) {
+        errorMessage = errorDescription
+      }
+
+      setError(errorMessage)
     }
   }, [searchParams])
 
-  // Check if user has a valid session for password reset
+  // Check if user has a valid session for password reset (but don't immediately error)
   useEffect(() => {
-    if (!loading && !user) {
-      setError('Session expired. Please request a new password reset link.')
-    }
+    // Give some time for the session to load after redirect
+    const timer = setTimeout(() => {
+      if (!loading && !user) {
+        setError('Session expired. Please request a new password reset link.')
+      }
+    }, 2000) // Wait 2 seconds for session to establish
+
+    return () => clearTimeout(timer)
   }, [user, loading])
 
   const handleSubmit = async (e: React.FormEvent) => {
