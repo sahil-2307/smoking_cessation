@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Clock, Target, TrendingUp, Heart, Award, Edit, Badge, Sparkles, Zap } from 'lucide-react'
+import { Clock, Target, TrendingUp, Heart, Award, Edit, Badge, Sparkles, Zap, Download } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
+import { downloadBadge, getBadgeData } from '@/utils/badgeGenerator'
 
 export default function DashboardPage() {
   const { user, loading: authLoading, sessionInitialized } = useAuth()
@@ -34,6 +35,12 @@ export default function DashboardPage() {
       })
     }
   }, [stats?.profile])
+
+  const handleDownloadBadge = (achievementType: string, days: number) => {
+    const username = user?.profile?.username || user?.email?.split('@')[0] || 'user'
+    const badge = getBadgeData(achievementType, days, username)
+    downloadBadge(badge)
+  }
 
   const handleUpdateProfile = async () => {
     if (!user) return
@@ -319,6 +326,14 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium">First Day Warrior</p>
                       <p className="text-xs text-muted-foreground">24 hours smoke-free!</p>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadBadge('first_day', stats?.timeSinceQuit?.days || 1)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Download className="h-3 w-3" />
+                    </Button>
                   </div>
                 )}
                 {stats?.timeSinceQuit?.days >= 3 && (
@@ -328,6 +343,14 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium">Nicotine Fighter</p>
                       <p className="text-xs text-muted-foreground">3 days - worst cravings behind you!</p>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadBadge('nicotine_fighter', stats?.timeSinceQuit?.days || 3)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Download className="h-3 w-3" />
+                    </Button>
                   </div>
                 )}
                 {stats?.timeSinceQuit?.days >= 7 && (
@@ -337,6 +360,14 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium">Week Champion</p>
                       <p className="text-xs text-muted-foreground">1 week smoke-free milestone!</p>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadBadge('week_champion', stats?.timeSinceQuit?.days || 7)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Download className="h-3 w-3" />
+                    </Button>
                   </div>
                 )}
                 {(!stats?.timeSinceQuit?.days || stats?.timeSinceQuit?.days < 1) && (

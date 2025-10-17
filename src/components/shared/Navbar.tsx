@@ -14,12 +14,14 @@ import {
   Users,
   Settings,
   LogOut,
-  User
+  User,
+  Trophy
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   { name: 'Cravings', href: '/cravings', icon: AlertCircle },
   { name: 'Journal', href: '/journal', icon: BookOpen },
   { name: 'Community', href: '/community', icon: Users },
