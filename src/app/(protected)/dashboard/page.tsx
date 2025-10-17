@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuitProgress } from '@/hooks/useQuitProgress'
+import { useUserSettings } from '@/hooks/useUserSettings'
+import { useAchievements } from '@/hooks/useAchievements'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Clock, Target, TrendingUp, Heart, Award, Edit, Badge, Sparkles, Zap, Download } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Clock, Target, TrendingUp, Heart, Award, Edit, Badge, Sparkles, Zap, Download, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
@@ -18,24 +21,35 @@ import { formatCurrency } from '@/lib/utils'
 export default function DashboardPage() {
   const { user, loading: authLoading, sessionInitialized } = useAuth()
   const { stats, loading: statsLoading, error } = useQuitProgress()
+  const { settings, updateSettings } = useUserSettings()
+  const { checkAndAwardAchievements, getDisplayableAchievements } = useAchievements()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [editForm, setEditForm] = useState({
     cigarettes_per_day: '',
     cost_per_pack: '',
-    cigarettes_per_pack: ''
+    cigarettes_per_pack: '',
+    currency: 'INR' as 'INR' | 'USD'
   })
 
   // Populate edit form when stats/profile data is available
   useEffect(() => {
-    if (stats?.profile) {
+    if (stats?.profile && settings) {
       setEditForm({
         cigarettes_per_day: stats.profile.cigarettes_per_day?.toString() || '',
         cost_per_pack: stats.profile.cost_per_pack?.toString() || '',
-        cigarettes_per_pack: stats.profile.cigarettes_per_pack?.toString() || '20'
+        cigarettes_per_pack: stats.profile.cigarettes_per_pack?.toString() || '20',
+        currency: settings.currency
       })
     }
-  }, [stats?.profile])
+  }, [stats?.profile, settings])
+
+  // Check and award achievements when stats update
+  useEffect(() => {
+    if (stats?.timeSinceQuit?.days && stats.timeSinceQuit.days > 0) {
+      checkAndAwardAchievements(stats.timeSinceQuit.days)
+    }
+  }, [stats?.timeSinceQuit?.days, checkAndAwardAchievements])
 
   const handleDownloadBadge = (achievementType: string, days: number) => {
     const username = user?.profile?.username || user?.email?.split('@')[0] || 'user'
@@ -50,6 +64,7 @@ export default function DashboardPage() {
     try {
       const supabase = createClient()
 
+      // Update profile data
       const updateData: Database['public']['Tables']['profiles']['Update'] = {
         cigarettes_per_day: editForm.cigarettes_per_day ? parseInt(editForm.cigarettes_per_day) : null,
         cost_per_pack: editForm.cost_per_pack ? parseFloat(editForm.cost_per_pack) : null,
@@ -62,6 +77,11 @@ export default function DashboardPage() {
         .eq('id', user.id as any)
 
       if (error) throw error
+
+      // Update currency setting if changed
+      if (editForm.currency !== settings?.currency) {
+        await updateSettings({ currency: editForm.currency })
+      }
 
       alert('Profile updated successfully! 🎉')
       setIsEditDialogOpen(false)
@@ -149,15 +169,38 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="cost_per_pack">Cost per Pack ($)</Label>
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    value={editForm.currency}
+                    onValueChange={(value) => setEditForm(prev => ({...prev, currency: value as 'INR' | 'USD'}))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INR">₹ Indian Rupee (INR)</SelectItem>
+                      <SelectItem value="USD">$ US Dollar (USD)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="cost_per_pack">
+                    Cost per Pack ({editForm.currency === 'INR' ? '₹' : '$'})
+                  </Label>
                   <Input
                     id="cost_per_pack"
                     type="number"
                     step="0.01"
                     value={editForm.cost_per_pack}
                     onChange={(e) => setEditForm(prev => ({...prev, cost_per_pack: e.target.value}))}
-                    placeholder="e.g., 12.50"
+                    placeholder={editForm.currency === 'INR' ? 'e.g., 150' : 'e.g., 12.50'}
                   />
+                  <p className="text-xs text-gray-600 mt-1">
+                    {editForm.currency === 'INR'
+                      ? 'Typical cigarette pack costs ₹100-200 in India'
+                      : 'Typical cigarette pack costs $8-15 in US'
+                    }
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="cigarettes_per_pack">Cigarettes per Pack</Label>
