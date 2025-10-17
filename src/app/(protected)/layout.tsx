@@ -11,16 +11,16 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, loading } = useAuth()
+  const { user, loading, sessionInitialized } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (sessionInitialized && !user) {
       router.push('/login')
     }
-  }, [user, loading, router])
+  }, [user, sessionInitialized, router])
 
-  if (loading) {
+  if (!sessionInitialized || loading) {
     return <LoadingPage />
   }
 

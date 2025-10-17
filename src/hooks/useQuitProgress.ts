@@ -37,21 +37,12 @@ export function useQuitProgress() {
         }
 
         // Calculate basic quit statistics
-        console.log('Profile data for calculation:', {
-          quit_date: profile.quit_date,
-          cigarettes_per_day: profile.cigarettes_per_day,
-          cost_per_pack: profile.cost_per_pack,
-          cigarettes_per_pack: profile.cigarettes_per_pack
-        })
-
         const quitStats = calculateQuitStats(
           profile.quit_date,
           profile.cigarettes_per_day || 0,
           profile.cost_per_pack || 0,
           profile.cigarettes_per_pack || 20
         )
-
-        console.log('Calculated quit stats:', quitStats)
 
         // Get time since quit
         const timeSinceQuit = getTimeSinceQuit(profile.quit_date)

@@ -13,44 +13,15 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, sessionInitialized } = useAuth()
   const { stats, loading: statsLoading, error } = useQuitProgress()
-  const [hasTimedOut, setHasTimedOut] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
-  const [showContent, setShowContent] = useState(false)
   const [editForm, setEditForm] = useState({
     cigarettes_per_day: '',
     cost_per_pack: '',
     cigarettes_per_pack: ''
   })
-
-  // Add timeout to prevent infinite loading
-  useEffect(() => {
-    console.log('Dashboard: useEffect - authLoading:', authLoading, 'statsLoading:', statsLoading)
-
-    const timer = setTimeout(() => {
-      if (authLoading || statsLoading) {
-        console.log('Dashboard loading timeout - forcing render')
-        console.log('At timeout - authLoading:', authLoading, 'statsLoading:', statsLoading)
-        setHasTimedOut(true)
-      }
-    }, 8000) // 8 second timeout
-
-    return () => clearTimeout(timer)
-  }, [authLoading, statsLoading])
-
-  // Add debug logging for state changes
-  useEffect(() => {
-    console.log('Dashboard state changed:', {
-      authLoading,
-      statsLoading,
-      hasUser: !!user,
-      hasStats: !!stats,
-      error,
-      hasTimedOut
-    })
-  }, [authLoading, statsLoading, user, stats, error, hasTimedOut])
 
   // Populate edit form when stats/profile data is available
   useEffect(() => {
@@ -62,20 +33,6 @@ export default function DashboardPage() {
       })
     }
   }, [stats?.profile])
-
-  // Control when to show content to prevent glitch
-  useEffect(() => {
-    if (!authLoading && !statsLoading && user) {
-      // Add a small delay to ensure smooth transition
-      const timer = setTimeout(() => {
-        setShowContent(true)
-      }, 100)
-
-      return () => clearTimeout(timer)
-    } else {
-      setShowContent(false)
-    }
-  }, [authLoading, statsLoading, user])
 
   const handleUpdateProfile = async () => {
     if (!user) return
@@ -109,8 +66,7 @@ export default function DashboardPage() {
     }
   }
 
-  // Show loading unless we've timed out or should show content
-  if (((authLoading || statsLoading) && !hasTimedOut) || (!showContent && !hasTimedOut)) {
+  if (!sessionInitialized || authLoading || statsLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
@@ -137,13 +93,11 @@ export default function DashboardPage() {
     )
   }
 
-  // Show error card but don't prevent the dashboard from rendering
-  const showErrorCard = error && !statsLoading
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Show error message if there's an issue loading stats */}
-      {showErrorCard && (
+      {error && (
         <Card className="border-red-200 mb-6">
           <CardContent className="p-4">
             <p className="text-red-600 text-sm">Error loading some data: {error}</p>

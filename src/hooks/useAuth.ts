@@ -19,12 +19,15 @@ export interface AuthUser extends User {
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sessionInitialized, setSessionInitialized] = useState(false)
+  const [isSigningIn, setIsSigningIn] = useState(false)
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
-    const getUser = async () => {
+    const loadSession = async () => {
       try {
+        setLoading(true)
         const { data: { session } } = await supabase.auth.getSession()
 
         if (session?.user) {
@@ -38,7 +41,6 @@ export function useAuth() {
             setUser({ ...session.user, profile: profile || undefined })
           } catch (profileError) {
             console.error('Error fetching profile:', profileError)
-            // Set user without profile if profile fetch fails
             setUser({ ...session.user, profile: undefined })
           }
         } else {
@@ -48,17 +50,20 @@ export function useAuth() {
         console.error('Error getting session:', error)
         setUser(null)
       } finally {
+        setSessionInitialized(true)
         setLoading(false)
       }
     }
 
-    getUser()
+    loadSession()
 
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event)
 
-        if (session?.user) {
+        // Only handle SIGNED_IN during active sign-in process
+        if (event === 'SIGNED_IN' && session?.user && isSigningIn) {
           try {
             const { data: profile } = await supabase
               .from('profiles')
@@ -67,28 +72,52 @@ export function useAuth() {
               .single()
 
             setUser({ ...session.user, profile: profile || undefined })
+            setLoading(false)
+            setIsSigningIn(false)
+
+            // Redirect to dashboard after successful sign in
+            router.push('/dashboard')
           } catch (profileError) {
-            console.error('Error fetching profile after auth change:', profileError)
+            console.error('Error fetching profile after sign in:', profileError)
             setUser({ ...session.user, profile: undefined })
+            setLoading(false)
+            setIsSigningIn(false)
+            router.push('/dashboard')
           }
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           setUser(null)
+          setLoading(false)
+          setIsSigningIn(false)
         }
-        setLoading(false)
+        // Ignore other events including INITIAL_SESSION to prevent loops
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [router, isSigningIn])
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    setIsSigningIn(true)
+    setLoading(true)
 
-    if (error) throw error
-    return data
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setIsSigningIn(false)
+        setLoading(false)
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      setIsSigningIn(false)
+      setLoading(false)
+      throw error
+    }
   }
 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string }) => {
@@ -167,6 +196,7 @@ export function useAuth() {
   return {
     user,
     loading,
+    sessionInitialized,
     signIn,
     signUp,
     signInWithGoogle,
