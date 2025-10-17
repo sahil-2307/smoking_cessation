@@ -72,7 +72,7 @@ export default function OnboardingPage() {
       // Update or create profile with timeout
       const upsertPromise = supabase
         .from('profiles')
-        .upsert(profileData)
+        .upsert(profileData as any)
 
       const result = await Promise.race([upsertPromise, timeoutPromise]) as any
 

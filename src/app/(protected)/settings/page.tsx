@@ -36,14 +36,14 @@ export default function SettingsPage() {
         const { data: profileData, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', session.user.id as any)
           .single()
 
         if (!error && profileData) {
           setProfile(profileData)
           setEditForm({
-            username: profileData.username || session.user.email, // Default to email
-            full_name: profileData.full_name || ''
+            username: (profileData as any).username || session.user.email, // Default to email
+            full_name: (profileData as any).full_name || ''
           })
         }
       } catch (error) {

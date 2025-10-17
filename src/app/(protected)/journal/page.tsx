@@ -46,7 +46,7 @@ export default function JournalPage() {
         const { data: journalData, error } = await supabase
           .from('journal_entries')
           .select('*')
-          .eq('user_id', session.user.id)
+          .eq('user_id', session.user.id as any)
           .order('created_at', { ascending: false })
 
         if (error) {
@@ -80,7 +80,7 @@ export default function JournalPage() {
           content: newEntry.content,
           mood: newEntry.mood || null,
           created_at: new Date().toISOString()
-        })
+        } as any)
         .select()
 
       if (error) throw error
@@ -131,8 +131,8 @@ export default function JournalPage() {
           content: editEntry.content,
           mood: editEntry.mood || null,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', editingEntry.id)
+        } as any)
+        .eq('id', editingEntry.id as any)
 
       if (error) throw error
 

@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Calendar, Clock, Target, TrendingUp, Heart, Award, Edit } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import type { Database } from '@/types/database'
 
 export default function DashboardPage() {
   const { user, loading: authLoading, sessionInitialized } = useAuth()
@@ -41,15 +42,16 @@ export default function DashboardPage() {
     try {
       const supabase = createClient()
 
+      const updateData: Database['public']['Tables']['profiles']['Update'] = {
+        cigarettes_per_day: editForm.cigarettes_per_day ? parseInt(editForm.cigarettes_per_day) : null,
+        cost_per_pack: editForm.cost_per_pack ? parseFloat(editForm.cost_per_pack) : null,
+        cigarettes_per_pack: editForm.cigarettes_per_pack ? parseInt(editForm.cigarettes_per_pack) : 20
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          cigarettes_per_day: parseInt(editForm.cigarettes_per_day) || null,
-          cost_per_pack: parseFloat(editForm.cost_per_pack) || null,
-          cigarettes_per_pack: parseInt(editForm.cigarettes_per_pack) || 20,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
+        .update(updateData as any)
+        .eq('id', user.id as any)
 
       if (error) throw error
 
