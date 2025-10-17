@@ -264,7 +264,7 @@ export default function LeaderboardPage() {
                 return (
                   <div
                     key={entry.id}
-                    className={`flex items-center justify-between p-4 rounded-lg border ${
+                    className={`p-3 sm:p-4 rounded-lg border ${
                       isCurrentUser
                         ? 'border-green-300 bg-green-50'
                         : rank <= 3
@@ -272,39 +272,88 @@ export default function LeaderboardPage() {
                           : 'border-gray-200 bg-white'
                     }`}
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <Badge className={`px-2 py-1 ${getRankBadgeColor(rank)}`}>
-                          #{rank}
-                        </Badge>
-                        {getRankIcon(rank)}
+                    {/* Mobile Layout */}
+                    <div className="flex flex-col space-y-3 sm:hidden">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`px-2 py-1 text-xs ${getRankBadgeColor(rank)}`}>
+                            #{rank}
+                          </Badge>
+                          {getRankIcon(rank)}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-base">
+                            {formatValue(activeCategory,
+                              activeCategory === 'money_saved' ? entry.money_saved :
+                              activeCategory === 'current_streak' ? entry.current_streak :
+                              activeCategory === 'cigarettes_avoided' ? entry.cigarettes_not_smoked :
+                              entry.days_smoke_free
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={entry.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {entry.full_name ? entry.full_name.charAt(0).toUpperCase() : entry.username.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {entry.full_name || entry.username}
-                          {isCurrentUser && <span className="text-green-600 text-sm ml-2">(You)</span>}
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={entry.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {entry.full_name ? entry.full_name.charAt(0).toUpperCase() : entry.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {entry.full_name || entry.username}
+                            {isCurrentUser && <span className="text-green-600 text-xs ml-1">(You)</span>}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">@{entry.username}</p>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">
+                          Since {new Date(entry.quit_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: '2-digit'
+                          })}
                         </p>
-                        <p className="text-sm text-gray-500">@{entry.username}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">
-                        {formatValue(activeCategory,
-                          activeCategory === 'money_saved' ? entry.money_saved :
-                          activeCategory === 'current_streak' ? entry.current_streak :
-                          activeCategory === 'cigarettes_avoided' ? entry.cigarettes_not_smoked :
-                          entry.days_smoke_free
-                        )}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Since {new Date(entry.quit_date).toLocaleDateString()}
-                      </p>
+
+                    {/* Desktop Layout */}
+                    <div className="hidden sm:flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`px-2 py-1 ${getRankBadgeColor(rank)}`}>
+                            #{rank}
+                          </Badge>
+                          {getRankIcon(rank)}
+                        </div>
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={entry.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {entry.full_name ? entry.full_name.charAt(0).toUpperCase() : entry.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {entry.full_name || entry.username}
+                            {isCurrentUser && <span className="text-green-600 text-sm ml-2">(You)</span>}
+                          </p>
+                          <p className="text-sm text-gray-500">@{entry.username}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg">
+                          {formatValue(activeCategory,
+                            activeCategory === 'money_saved' ? entry.money_saved :
+                            activeCategory === 'current_streak' ? entry.current_streak :
+                            activeCategory === 'cigarettes_avoided' ? entry.cigarettes_not_smoked :
+                            entry.days_smoke_free
+                          )}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Since {new Date(entry.quit_date).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )

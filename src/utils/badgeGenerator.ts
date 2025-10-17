@@ -9,67 +9,119 @@ export interface BadgeData {
 }
 
 export function generateBadgeSVG(badge: BadgeData): string {
-  const svg = `
-    <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  const svg = `<svg width="600" height="450" viewBox="0 0 600 450" xmlns="http://www.w3.org/2000/svg" style="background: white;">
       <defs>
         <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" style="stop-color:${badge.color}30;stop-opacity:1" />
           <stop offset="100%" style="stop-color:${badge.color};stop-opacity:1" />
         </linearGradient>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#00000020"/>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="3" dy="6" stdDeviation="6" flood-color="#00000030"/>
         </filter>
       </defs>
 
-      <!-- Background -->
-      <rect width="400" height="300" fill="url(#grad)" rx="20" filter="url(#shadow)"/>
+      <!-- White Background -->
+      <rect width="600" height="450" fill="white" />
+
+      <!-- Main Badge Background -->
+      <rect x="50" y="50" width="500" height="350" fill="url(#grad)" rx="25" filter="url(#shadow)"/>
 
       <!-- Border -->
-      <rect x="10" y="10" width="380" height="280" fill="none" stroke="white" stroke-width="2" rx="15" opacity="0.5"/>
+      <rect x="65" y="65" width="470" height="320" fill="none" stroke="white" stroke-width="3" rx="20" opacity="0.6"/>
 
       <!-- Header -->
-      <rect x="0" y="0" width="400" height="80" fill="${badge.color}" rx="20"/>
-      <rect x="0" y="60" width="400" height="20" fill="${badge.color}"/>
+      <rect x="50" y="50" width="500" height="100" fill="${badge.color}" rx="25"/>
+      <rect x="50" y="125" width="500" height="25" fill="${badge.color}"/>
 
-      <!-- Icon -->
-      <circle cx="200" cy="40" r="25" fill="white" opacity="0.2"/>
-      <text x="200" y="50" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle">${badge.icon}</text>
+      <!-- Icon Circle -->
+      <circle cx="300" cy="100" r="35" fill="white" opacity="0.3"/>
+      <text x="300" y="115" font-family="Arial, sans-serif" font-size="32" fill="white" text-anchor="middle">${badge.icon}</text>
 
       <!-- Title -->
-      <text x="200" y="130" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">${badge.title}</text>
+      <text x="300" y="200" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">${badge.title}</text>
 
       <!-- Subtitle -->
-      <text x="200" y="160" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" opacity="0.9">${badge.subtitle}</text>
+      <text x="300" y="235" font-family="Arial, sans-serif" font-size="20" fill="white" text-anchor="middle" opacity="0.9">${badge.subtitle}</text>
 
-      <!-- Days -->
-      <text x="200" y="200" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">${badge.days} DAYS</text>
+      <!-- Days Display -->
+      <text x="300" y="295" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">${badge.days} DAYS</text>
 
       <!-- Username -->
-      <text x="200" y="230" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" opacity="0.8">@${badge.username}</text>
+      <text x="300" y="335" font-family="Arial, sans-serif" font-size="22" fill="white" text-anchor="middle" opacity="0.8">@${badge.username}</text>
 
       <!-- Date -->
-      <text x="200" y="260" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle" opacity="0.6">${badge.date}</text>
+      <text x="300" y="365" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" opacity="0.7">${badge.date}</text>
 
       <!-- QuitSmoking Branding -->
-      <text x="30" y="285" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="start" opacity="0.5">QuitSmoking App</text>
-    </svg>
-  `.trim()
+      <text x="75" y="385" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="start" opacity="0.6">🚭 QuitSmoking App</text>
+
+      <!-- Achievement Badge Icon -->
+      <circle cx="450" cy="375" r="20" fill="white" opacity="0.2"/>
+      <text x="450" y="382" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle">🏆</text>
+    </svg>`
 
   return svg
 }
 
 export function downloadBadge(badge: BadgeData): void {
   const svg = generateBadgeSVG(badge)
-  const blob = new Blob([svg], { type: 'image/svg+xml' })
-  const url = URL.createObjectURL(blob)
 
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${badge.title.replace(/\s+/g, '_')}_${badge.days}days.svg`
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  // Create a canvas to convert SVG to PNG for better compatibility
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  const img = new Image()
+
+  // Set canvas size (2x for high DPI)
+  canvas.width = 1200
+  canvas.height = 900
+
+  if (ctx) {
+    // Fill white background
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+  }
+
+  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
+  const svgUrl = URL.createObjectURL(svgBlob)
+
+  img.onload = () => {
+    if (ctx) {
+      // Draw the SVG image onto the canvas
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = `${badge.title.replace(/\s+/g, '_')}_${badge.days}days_badge.png`
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        }
+      }, 'image/png', 1.0)
+    }
+
+    URL.revokeObjectURL(svgUrl)
+  }
+
+  img.onerror = () => {
+    // Fallback to SVG download if canvas conversion fails
+    const blob = new Blob([svg], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${badge.title.replace(/\s+/g, '_')}_${badge.days}days_badge.svg`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    URL.revokeObjectURL(svgUrl)
+  }
+
+  img.src = svgUrl
 }
 
 export function getBadgeData(achievement: string, days: number, username: string): BadgeData {
