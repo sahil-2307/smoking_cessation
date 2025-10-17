@@ -121,11 +121,17 @@ export function useAuth() {
   }
 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string }) => {
+    const isProduction = process.env.NODE_ENV === 'production'
+    const baseUrl = isProduction
+      ? process.env.NEXT_PUBLIC_SITE_URL || 'https://smokingcessation-3sacqmuoo-sahils-projects-3df0c739.vercel.app'
+      : window.location.origin
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: metadata,
+        emailRedirectTo: `${baseUrl}/auth/callback`,
       },
     })
 
@@ -154,8 +160,13 @@ export function useAuth() {
   }
 
   const resetPassword = async (email: string) => {
+    const isProduction = process.env.NODE_ENV === 'production'
+    const baseUrl = isProduction
+      ? process.env.NEXT_PUBLIC_SITE_URL || 'https://smokingcessation-3sacqmuoo-sahils-projects-3df0c739.vercel.app'
+      : window.location.origin
+
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: `${baseUrl}/auth/reset-password`,
     })
 
     if (error) throw error

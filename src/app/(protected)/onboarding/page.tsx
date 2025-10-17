@@ -107,8 +107,6 @@ export default function OnboardingPage() {
     return <div className="flex items-center justify-center min-h-screen">Please log in</div>
   }
 
-  const today = new Date().toISOString().split('T')[0]
-
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="mb-8">
@@ -170,7 +168,6 @@ export default function OnboardingPage() {
                 <Input
                   id="quit_date"
                   type="date"
-                  max={today}
                   value={formData.quit_date}
                   onChange={(e) => handleInputChange('quit_date', e.target.value)}
                   required
