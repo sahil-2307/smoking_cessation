@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useQuitProgress } from '@/hooks/useQuitProgress'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { useAchievements } from '@/hooks/useAchievements'
+import { useNotifications } from '@/hooks/useNotifications'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,12 +19,14 @@ import type { Database } from '@/types/database'
 import { downloadBadge, getBadgeData } from '@/utils/badgeGenerator'
 import { formatCurrency } from '@/lib/utils'
 import { InstallPWA } from '@/components/pwa/InstallPWA'
+import { NotificationPrompt } from '@/components/notifications/NotificationPrompt'
 
 export default function DashboardPage() {
   const { user, loading: authLoading, sessionInitialized } = useAuth()
   const { stats, loading: statsLoading, error } = useQuitProgress()
   const { settings, updateSettings } = useUserSettings()
   const { checkAndAwardAchievements, getDisplayableAchievements } = useAchievements()
+  const { checkMilestones, checkHealthBenefits, scheduleDailyReminder } = useNotifications()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -51,6 +54,28 @@ export default function DashboardPage() {
       checkAndAwardAchievements(stats.timeSinceQuit.days)
     }
   }, [stats?.timeSinceQuit?.days, checkAndAwardAchievements])
+
+  // Check milestones and send notifications
+  useEffect(() => {
+    if (stats?.timeSinceQuit?.days) {
+      checkMilestones(stats.timeSinceQuit.days)
+    }
+  }, [stats?.timeSinceQuit?.days, checkMilestones])
+
+  // Check health benefits and send notifications
+  useEffect(() => {
+    if (stats?.timeSinceQuit?.hours) {
+      checkHealthBenefits(stats.timeSinceQuit.hours)
+    }
+  }, [stats?.timeSinceQuit?.hours, checkHealthBenefits])
+
+  // Schedule daily reminders
+  useEffect(() => {
+    if (settings?.reminder_time) {
+      const hour = parseInt(settings.reminder_time.split(':')[0])
+      scheduleDailyReminder(hour)
+    }
+  }, [settings?.reminder_time, scheduleDailyReminder])
 
   const handleDownloadBadge = (achievementType: string, days: number) => {
     const username = user?.profile?.username || user?.email?.split('@')[0] || 'user'
@@ -129,6 +154,9 @@ export default function DashboardPage() {
     <div className="container mx-auto px-4 py-8">
       {/* PWA Install Prompt */}
       <InstallPWA />
+
+      {/* Notification Permission Prompt */}
+      <NotificationPrompt />
 
       {/* Show error message if there's an issue loading stats */}
       {error && (
