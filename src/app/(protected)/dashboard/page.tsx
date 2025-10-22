@@ -17,6 +17,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
 import { downloadBadge, getBadgeData } from '@/utils/badgeGenerator'
 import { formatCurrency } from '@/lib/utils'
+import { InstallPWA } from '@/components/pwa/InstallPWA'
 
 export default function DashboardPage() {
   const { user, loading: authLoading, sessionInitialized } = useAuth()
@@ -126,6 +127,9 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* PWA Install Prompt */}
+      <InstallPWA />
+
       {/* Show error message if there's an issue loading stats */}
       {error && (
         <Card className="border-red-200 mb-6">

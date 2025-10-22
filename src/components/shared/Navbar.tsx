@@ -18,6 +18,7 @@ import {
   Trophy
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { InstallButton } from '@/components/pwa/InstallButton'
 
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -72,6 +73,7 @@ export default function Navbar() {
 
           {/* Profile and Sign Out */}
           <div className="hidden md:flex items-center space-x-4">
+            <InstallButton />
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                 {user?.profile?.avatar_url ? (
