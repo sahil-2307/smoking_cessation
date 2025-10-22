@@ -110,19 +110,19 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   /**
    * Check for milestone achievements and send notifications
    */
-  const checkMilestones = useCallback((daysSmokeF ree: number) => {
+  const checkMilestones = useCallback((daysSmokeFree: number) => {
     const milestones = [1, 3, 7, 14, 21, 30, 60, 90, 180, 365];
 
     // Check if this is a milestone day
-    if (milestones.includes(daysSmokeF ree)) {
+    if (milestones.includes(daysSmokeFree)) {
       // Check if we've already sent notification for this milestone
       const notifiedMilestones = JSON.parse(
         localStorage.getItem('notified_milestones') || '[]'
       );
 
-      if (!notifiedMilestones.includes(daysSmokeF ree)) {
-        sendMilestoneNotification(daysSmokeF ree);
-        notifiedMilestones.push(daysSmokeF ree);
+      if (!notifiedMilestones.includes(daysSmokeFree)) {
+        sendMilestoneNotification(daysSmokeFree);
+        notifiedMilestones.push(daysSmokeFree);
         localStorage.setItem('notified_milestones', JSON.stringify(notifiedMilestones));
       }
     }
